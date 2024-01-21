@@ -13,6 +13,8 @@ if(NOT DEFINED CMAKE_CUDA_STANDARD)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 endif()
 
+add_subdirectory ("src")
+
 # add_library(helpers STATIC
 #     helper_cuda.h
 #     helper_string.h
@@ -28,10 +30,4 @@ endif()
 #                        LINKER_LANGUAGE CXX
 #                       )
 
-
-
-add_executable(cmake_cuda vectorAddition.cu )
-target_include_directories(cmake_cuda PUBLIC ".")
-set_target_properties(cmake_cuda PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-#target_link_libraries(cmake_cuda PRIVATE helpers)
 
