@@ -33,10 +33,9 @@ int main() {
     image im = load_image((char*)"../../data/dog.jpg");
     image gray = make_image(1, im.h, im.w);
 
-    size_t inputImgBytes = im.c*im.w*im.h*4;
-    size_t outputImgBytes = im.w*im.h*4;
+    size_t inputImgBytes = im.c*im.w*im.h*sizeof(decltype(*im.data));
+    size_t outputImgBytes = im.w*im.h*sizeof(decltype(*im.data));
 
-    cout << "Esto que es: " << sizeof(decltype(*im.data)) << endl;
     // Error code to check return values for CUDA calls
     cudaError_t err = cudaSuccess;
 
@@ -84,7 +83,6 @@ int main() {
 
     cout << "Copy output data from the CUDA device to the host memory" << endl;
 
-    cout << "Output bytes: " << outputImgBytes << endl;
     err = cudaMemcpy(gray.data, d_B, outputImgBytes, cudaMemcpyDeviceToHost);
 
     if (err != cudaSuccess) {
