@@ -21,6 +21,9 @@ set_target_properties(cmake_cuda PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 add_executable(ImgtoGray image-grayscale/imageGray.cu )
 target_include_directories(ImgtoGray PRIVATE "../include")
 target_link_libraries (ImgtoGray PRIVATE Image)
-
-
 set_target_properties(ImgtoGray PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+add_executable(ImgBlur image-blur/imageBlur.cu )
+target_include_directories(ImgBlur PRIVATE "../include")
+target_link_libraries (ImgBlur PRIVATE Image)
+set_target_properties(ImgBlur PROPERTIES CUDA_SEPARABLE_COMPILATION ON)

@@ -6,31 +6,37 @@
 using namespace std;
 
 __global__
-void rgbtoGray(const float *A, float *B, int width, int height)
+void blurImgGray(const float *A, float *B, int width, int height, int kSize, int halfKSzie)
 {
     int col = blockDim.x * blockIdx.x + threadIdx.x;
     int row = blockDim.y * blockIdx.y + threadIdx.y;
 
-    int pixel_per_channel = width * height;
-    float r;
-    float g;
-    float b;
-
-    //if(row < 0 || row >= height || col < 0 || col >= width) return;
-
     if ((col < width) && (row < height))
     {
-        int index = row * width + col;
-        r = A[index];
-        g = A[index + pixel_per_channel];
-        b = A[index + 2*pixel_per_channel];
-        B[index] = 0.299 * r + 0.587 * g + 0.114 * b;
+        float sumPixel = 0.0f;
+        float grayPixel = 0.0f;
+        int totalPixels = 0;
+        float resultPixel = 0.0f;
+        for (int y = -halfKSzie; y != halfKSzie+1; y++) 
+        {
+            for (int x = -halfKSzie; x != halfKSzie+1; x++)
+            {
+                if ( (y >= 0) && (y < height) && (x >= 0) && (x < width))
+                {
+                    grayPixel = A[(row + y)*width + (col + x)];
+                    sumPixel += grayPixel;
+                    totalPixels++;
+                }
+            }
+        }
+        resultPixel = sumPixel / totalPixels;
+        B[row * width + col] = resultPixel;
     }
 }
 
 int main() {
 
-    image im = load_image((char*)"../../data/dog.jpg");
+    image im = load_image((char*)"../../data/gray.jpg");
     image gray = make_image(1, im.h, im.w);
 
     size_t inputImgBytes = im.c*im.w*im.h*sizeof(decltype(*im.data));
@@ -71,7 +77,11 @@ int main() {
     const dim3 dimGrid((int)ceil((im.w)/16.0), (int)ceil((im.h)/16.0));
 	const dim3 dimBlock(16, 16, 1);
 
-    rgbtoGray <<< dimGrid, dimBlock  >>> (d_A, d_B, im.w, im.h);
+    // Calculate kernel size
+    constexpr int KernelSize = 15;
+    int kernelCenter = floor(KernelSize/2);
+
+    blurImgGray <<< dimGrid, dimBlock  >>> (d_A, d_B, im.w, im.h, KernelSize, kernelCenter);
 
     err = cudaGetLastError();
 
@@ -92,7 +102,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    save_image(gray, (char *)"gray");
+    save_image(gray, (char *)"blur");
 
     return 0;
 }
