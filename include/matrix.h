@@ -5,7 +5,7 @@ extern "C" {
 #endif
 typedef struct matrix{
     int rows, cols;
-    float *data;
+    double *data;
 } matrix;
 
 void free_matrix(matrix m);

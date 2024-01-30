@@ -22,7 +22,7 @@ matrix make_empty_matrix(int rows, int cols)
 matrix make_matrix(int rows, int cols)
 {
     matrix m = make_empty_matrix(rows, cols);
-    m.data = calloc(rows*cols, sizeof(float));
+    m.data = calloc(rows*cols, sizeof(double));
     return m;
 }
 

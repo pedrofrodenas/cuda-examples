@@ -5,7 +5,7 @@
 #include "helper_cuda.h"
 
 __global__
-void matrixMultipli(const float *M, const float *N, float *P, int width)
+void matrixMultipli(const double *M, const double *N, double *P, int width)
 {
     int col = blockDim.x * blockIdx.x + threadIdx.x;
     int row = blockDim.y * blockIdx.y + threadIdx.y;
@@ -55,7 +55,7 @@ int main() {
     cudaError_t err = cudaSuccess;
 
     // Allocate the device input matrix M
-    float *d_M = NULL;
+    double *d_M = NULL;
     err = cudaMalloc((void **)&d_M, inputBytesM);
 
     if (err != cudaSuccess) {
@@ -65,7 +65,7 @@ int main() {
     }
 
     // Allocate the device input matrix N
-    float *d_N = NULL;
+    double *d_N = NULL;
     err = cudaMalloc((void **)&d_N, inputBytesN);
 
     if (err != cudaSuccess) {
@@ -76,7 +76,7 @@ int main() {
 
 
     // Allocate the device output matrix P
-    float *d_P = NULL;
+    double *d_P = NULL;
     err = cudaMalloc((void **)&d_P, outputBytes);
 
     if (err != cudaSuccess) {
