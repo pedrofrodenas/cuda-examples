@@ -129,5 +129,13 @@ int main() {
 
     print_matrix(P);
 
+    free_matrix(M);
+    free_matrix(N);
+    free_matrix(P);
+
+    cudaFree(d_M);
+    cudaFree(d_N);
+    cudaFree(d_P);
+
     return 0;
 }

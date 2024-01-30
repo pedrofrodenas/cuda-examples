@@ -94,5 +94,11 @@ int main() {
 
     save_image(gray, (char *)"gray");
 
+    free_image(gray);
+    free_image(im);
+
+    cudaFree(d_A);
+    cudaFree(d_B);
+
     return 0;
 }
