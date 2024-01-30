@@ -4,76 +4,130 @@
 #include "cuda_runtime.h"
 #include "helper_cuda.h"
 
+__global__
+void matrixMultipli(const float *M, const float *N, float *P, int width)
+{
+    int col = blockDim.x * blockIdx.x + threadIdx.x;
+    int row = blockDim.y * blockIdx.y + threadIdx.y;
+
+    if ((col < width) && (row < width))
+    {
+        int index = row * width + col;
+        float result  = 0.0;
+
+        for (int i=0; i < width; ++i)
+        {
+            result += M[(width*row) + i] * N[ (i*width) + col];
+        }
+        P[index] = result;   
+        
+    }
+}
+
 
 int main() {
 
-    image H = make_image(1,12, 3);
-    //cout << m.shallow << endl;
-    matrix g = make_matrix(12, 3);
     
+    matrix M = make_matrix(4, 4);
+    matrix N = make_matrix(4, 4);
+    matrix P = make_matrix(4, 4);
+    
+    for (int i=0; i<M.rows ; ++i)
+    {
+        for (int j=0; j < M.cols; ++j)
+        {
+            M.data[i*M.cols + j] = 2.0;
+        }
+    }
+    for (int i=0; i<N.rows ; ++i)
+    {
+        for (int j=0; j < N.cols; ++j)
+        {
+            N.data[i*N.cols + j] = 4.0;
+        }
+    }
+
+    size_t inputBytesM = M.rows*M.cols*sizeof(decltype(*M.data));
+    size_t inputBytesN = N.rows*N.cols*sizeof(decltype(*N.data));
+    size_t outputBytes = M.rows*N.cols*sizeof(decltype(*N.data));
+
+    // Error code to check return values for CUDA calls
+    cudaError_t err = cudaSuccess;
+
+    // Allocate the device input matrix M
+    float *d_M = NULL;
+    err = cudaMalloc((void **)&d_M, inputBytesM);
+
+    if (err != cudaSuccess) {
+    fprintf(stderr, "Failed to allocate device matrix M (error code %s)!\n",
+            cudaGetErrorString(err));
+    exit(EXIT_FAILURE);
+    }
+
+    // Allocate the device input matrix N
+    float *d_N = NULL;
+    err = cudaMalloc((void **)&d_N, inputBytesN);
+
+    if (err != cudaSuccess) {
+        fprintf(stderr, "Failed to allocate device matrix N (error code %s)!\n",
+                cudaGetErrorString(err));
+        exit(EXIT_FAILURE);
+    }
 
 
+    // Allocate the device output matrix P
+    float *d_P = NULL;
+    err = cudaMalloc((void **)&d_P, outputBytes);
 
-    // size_t inputImgBytes = im.c*im.w*im.h*sizeof(decltype(*im.data));
-    // size_t outputImgBytes = im.w*im.h*sizeof(decltype(*im.data));
+    if (err != cudaSuccess) {
+        fprintf(stderr, "Failed to allocate device output matrix P (error code %s)!\n",
+                cudaGetErrorString(err));
+        exit(EXIT_FAILURE);
+    }
 
-    // // Error code to check return values for CUDA calls
-    // cudaError_t err = cudaSuccess;
+    err = cudaMemcpy(d_M, M.data, inputBytesM, cudaMemcpyHostToDevice);
 
-    // // Allocate the device input vector A
-    // float *d_A = NULL;
-    // err = cudaMalloc((void **)&d_A, inputImgBytes);
+    if (err != cudaSuccess) {
+        fprintf(stderr,
+                "Failed to copy matrix M from host to device (error code %s)!\n",
+                cudaGetErrorString(err));
+        exit(EXIT_FAILURE);
+    }
 
-    // if (err != cudaSuccess) {
-    // fprintf(stderr, "Failed to allocate device vector A (error code %s)!\n",
-    //         cudaGetErrorString(err));
-    // exit(EXIT_FAILURE);
-    // }
+    err = cudaMemcpy(d_N, N.data, inputBytesN, cudaMemcpyHostToDevice);
 
-    //   // Allocate the device input vector B
-    // float *d_B = NULL;
-    // err = cudaMalloc((void **)&d_B, outputImgBytes);
+    if (err != cudaSuccess) {
+        fprintf(stderr,
+                "Failed to copy matrix N from host to device (error code %s)!\n",
+                cudaGetErrorString(err));
+        exit(EXIT_FAILURE);
+    }
 
-    // if (err != cudaSuccess) {
-    //     fprintf(stderr, "Failed to allocate device vector B (error code %s)!\n",
-    //             cudaGetErrorString(err));
-    //     exit(EXIT_FAILURE);
-    // }
+    const dim3 dimGrid((int)ceil((M.cols)/16.0), (int)ceil((M.rows)/16.0));
+	const dim3 dimBlock(16, 16, 1);
 
-    // err = cudaMemcpy(d_A, im.data, inputImgBytes, cudaMemcpyHostToDevice);
+    matrixMultipli <<< dimGrid, dimBlock  >>> (d_M, d_N, d_P, M.rows);
 
-    // if (err != cudaSuccess) {
-    //     fprintf(stderr,
-    //             "Failed to copy vector A from host to device (error code %s)!\n",
-    //             cudaGetErrorString(err));
-    //     exit(EXIT_FAILURE);
-    // }
+    err = cudaGetLastError();
 
-    // const dim3 dimGrid((int)ceil((im.w)/16.0), (int)ceil((im.h)/16.0));
-	// const dim3 dimBlock(16, 16, 1);
+    if (err != cudaSuccess) {
+        fprintf(stderr, "Failed to launch matrixMultipli kernel (error code %s)!\n",
+                cudaGetErrorString(err));
+        exit(EXIT_FAILURE);
+    }
 
-    // rgbtoGray <<< dimGrid, dimBlock  >>> (d_A, d_B, im.w, im.h);
+    std::cout << "Copy output data from the CUDA device to the host memory" << std::endl;
 
-    // err = cudaGetLastError();
+    err = cudaMemcpy(P.data, d_P, outputBytes, cudaMemcpyDeviceToHost);
 
-    // if (err != cudaSuccess) {
-    //     fprintf(stderr, "Failed to launch vectorAdd kernel (error code %s)!\n",
-    //             cudaGetErrorString(err));
-    //     exit(EXIT_FAILURE);
-    // }
+    if (err != cudaSuccess) {
+        fprintf(stderr,
+                "Failed to copy matrix P from device to host (error code %s)!\n",
+                cudaGetErrorString(err));
+        exit(EXIT_FAILURE);
+    }
 
-    // cout << "Copy output data from the CUDA device to the host memory" << endl;
-
-    // err = cudaMemcpy(gray.data, d_B, outputImgBytes, cudaMemcpyDeviceToHost);
-
-    // if (err != cudaSuccess) {
-    //     fprintf(stderr,
-    //             "Failed to copy vector C from device to host (error code %s)!\n",
-    //             cudaGetErrorString(err));
-    //     exit(EXIT_FAILURE);
-    // }
-
-    // save_image(gray, (char *)"gray");
+    print_matrix(P);
 
     return 0;
 }
