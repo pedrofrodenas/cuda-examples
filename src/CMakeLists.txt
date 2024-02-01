@@ -33,3 +33,8 @@ add_executable(mMul mmul/matrixMul.cu)
 target_include_directories(mMul PRIVATE "../include")
 target_link_libraries (mMul PRIVATE Utils)
 set_target_properties(mMul PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+add_executable(mMulShared mmul/matrixMulShared.cu)
+target_include_directories(mMulShared PRIVATE "../include")
+target_link_libraries (mMulShared PRIVATE Utils)
+set_target_properties(mMulShared PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
