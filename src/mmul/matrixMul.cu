@@ -36,14 +36,14 @@ int main() {
     {
         for (int j=0; j < M.cols; ++j)
         {
-            M.data[i*M.cols + j] = 2.0;
+            M.data[i*M.cols + j] = 2.0 + 0.3*j - i*0.4;
         }
     }
     for (int i=0; i<N.rows ; ++i)
     {
         for (int j=0; j < N.cols; ++j)
         {
-            N.data[i*N.cols + j] = 4.0;
+            N.data[i*N.cols + j] = 5.0 - i - 0.5*j;
         }
     }
 

@@ -14,6 +14,8 @@ void matrixMultipliShared(const double *M, const double *N, double *P, int width
 
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     int row = blockIdx.y * blockDim.y + threadIdx.y;
+
+    double cum = 0.0;
     
     for (int ph = 0; ph < width/TILE_WIDTH; ++ph)
     {
@@ -21,8 +23,14 @@ void matrixMultipliShared(const double *M, const double *N, double *P, int width
         Mds[threadIdx.y][threadIdx.x] = M[row  * width + (threadIdx.x+(TILE_WIDTH*ph))];
         Nds[threadIdx.y][threadIdx.x] = N[(threadIdx.y + (TILE_WIDTH * ph)) * width + col];
         __syncthreads();
-    }
 
+        for (int i = 0; i < TILE_WIDTH; i++)
+        {
+            cum += Mds[threadIdx.y][i] * Nds[i][threadIdx.x];
+        }
+        __syncthreads();
+    }
+    P[row * width + col] = cum;
 }
 
 
@@ -37,14 +45,14 @@ int main() {
     {
         for (int j=0; j < M.cols; ++j)
         {
-            M.data[i*M.cols + j] = 2.0;
+            M.data[i*M.cols + j] = 2.0 + 0.3*j - i*0.4;
         }
     }
     for (int i=0; i<N.rows ; ++i)
     {
         for (int j=0; j < N.cols; ++j)
         {
-            N.data[i*N.cols + j] = 4.0;
+            N.data[i*N.cols + j] = 5.0 - i - 0.5*j;
         }
     }
 
