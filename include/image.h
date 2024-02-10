@@ -30,6 +30,12 @@ void free_image(image im);
 float get_pixel(image im, int c, int h, int w);
 void set_pixel(image im, int c, int h, int w, float v);
 
+void scale_image(image im, int c, float v);
+
+// Normalization
+void l1_normalize(image im);
+void feature_normalize(image im);
+
 
 #ifdef __cplusplus
 }

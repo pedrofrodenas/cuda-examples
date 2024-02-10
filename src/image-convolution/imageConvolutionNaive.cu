@@ -5,39 +5,38 @@
 
 using namespace std;
 
+// We assume that the convolutional filter is square
 __global__
-void blurImgGray(const float *A, float *B, int width, int height, int kSize, int halfKSzie)
+void naiveImageConvolution(const float *A, const float *filter, float *B, int r, int width , int height)
 {
     int col = blockDim.x * blockIdx.x + threadIdx.x;
     int row = blockDim.y * blockIdx.y + threadIdx.y;
 
     if ((col < width) && (row < height))
     {
-        float sumPixel = 0.0f;
-        float grayPixel = 0.0f;
-        int totalPixels = 0;
-        float resultPixel = 0.0f;
-        for (int y = -halfKSzie; y != halfKSzie+1; y++) 
+        float Pvalue = 0.f;
+        int filter_size = r * 2 + 1;
+
+        for (int i = 0; i < filter_size; ++i)
         {
-            for (int x = -halfKSzie; x != halfKSzie+1; x++)
+            for (int j = 0; j < filter_size; ++j)
             {
-                if ( (y >= 0) && (y < height) && (x >= 0) && (x < width))
+                int im_row = row - r + i;
+                int im_col = col - r + j;
+                if ( (im_row >= 0) && (im_row < height) && (im_col >= 0) && (im_col < width))
                 {
-                    grayPixel = A[(row + y)*width + (col + x)];
-                    sumPixel += grayPixel;
-                    totalPixels++;
+                    Pvalue += A[im_row * width + im_col] * filter[i * filter_size + j];
                 }
             }
         }
-        resultPixel = sumPixel / totalPixels;
-        B[row * width + col] = resultPixel;
+        B[row * width + col] = Pvalue;
     }
 }
 
 int main() {
 
     image im = load_image((char*)"../../data/gray.jpg");
-    image gray = make_image(1, im.h, im.w);
+    image output = make_image(1, im.h, im.w);
 
     image sobelXFilter = make_image(1, 3, 3);
     // First row values
@@ -106,14 +105,14 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    const dim3 dimGrid((int)ceil((im.w)/16.0), (int)ceil((im.h)/16.0));
-	const dim3 dimBlock(16, 16, 1);
+    const dim3 dimGrid((int)ceil((im.w)/4.0), (int)ceil((im.h)/4.0));
+	const dim3 dimBlock(4, 4, 1);
 
-    // Calculate kernel size
-    constexpr int KernelSize = 15;
-    int kernelCenter = floor(KernelSize/2);
+    int radious = floor(sobelXFilter.w/2);
 
-    blurImgGray <<< dimGrid, dimBlock  >>> (d_A, d_B, im.w, im.h, KernelSize, kernelCenter);
+    cout << "Radious: " << radious << endl;
+
+    naiveImageConvolution <<< dimGrid, dimBlock  >>> (d_A, d_mask, d_B, radious, im.w, im.h);
 
     err = cudaGetLastError();
 
@@ -125,7 +124,7 @@ int main() {
 
     cout << "Copy output data from the CUDA device to the host memory" << endl;
 
-    err = cudaMemcpy(gray.data, d_B, outputImgBytes, cudaMemcpyDeviceToHost);
+    err = cudaMemcpy(output.data, d_B, outputImgBytes, cudaMemcpyDeviceToHost);
 
     if (err != cudaSuccess) {
         fprintf(stderr,
@@ -134,7 +133,16 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    save_image(gray, (char *)"blur");
+    feature_normalize(output);
+    save_image(output, (char *)"sobel");
+
+    free_image(im);
+    free_image(sobelXFilter);
+    
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_mask);
+
 
     return 0;
 }
