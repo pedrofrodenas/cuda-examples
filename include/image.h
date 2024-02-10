@@ -26,6 +26,10 @@ image load_image_binary(const char *fname);
 void save_png(image im, const char *name);
 void free_image(image im);
 
+// Pixel write and read
+float get_pixel(image im, int c, int h, int w);
+void set_pixel(image im, int c, int h, int w, float v);
+
 
 #ifdef __cplusplus
 }

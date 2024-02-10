@@ -43,3 +43,8 @@ add_executable(mMulSharedBound mmul/matrixMulSharedBoundary.cu)
 target_include_directories(mMulSharedBound PRIVATE "../include")
 target_link_libraries (mMulSharedBound PRIVATE Utils)
 set_target_properties(mMulSharedBound PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+add_executable(imageConvolutionNaive image-convolution/imageConvolutionNaive.cu)
+target_include_directories(imageConvolutionNaive PRIVATE "../include")
+target_link_libraries (imageConvolutionNaive PRIVATE Utils)
+set_target_properties(imageConvolutionNaive PROPERTIES CUDA_SEPARABLE_COMPILATION ON)

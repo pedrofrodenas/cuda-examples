@@ -120,6 +120,40 @@ image load_image_binary(const char *fname)
     return im;
 }
 
+float get_pixel(image im, int c, int h, int w)
+{
+    // TODO Fill this in
+    int channels = im.c;
+    int rows = im.h;
+    int cols = im.w;
+
+    // Clamp
+    w = (w > 0) ? ((w < cols) ? w : (cols - 1)) : 0;
+    h = (h > 0) ? ((h < rows) ? h : (rows - 1)) : 0;
+    c = (c > 0) ? ((c < channels) ? c : (channels - 1)) : 0;
+
+    float pixel = *(im.data + (rows * cols * c) + (cols * h) + w);
+    return pixel;
+}
+
+void set_pixel(image im, int c, int h, int w, float v)
+{
+    // TODO Fill this in
+    int rows = im.h;
+    int cols = im.w;
+    int channels = im.c;
+
+    if (w < 0 || h < 0 || c < 0 || w >= cols || h >= rows || c >= channels)
+    {
+        return;
+    }
+    else
+    {
+        *(im.data + (rows * cols * c) + (cols * h + w)) = v;
+        return;
+    }
+}
+
 void free_image(image im)
 {
     free(im.data);
