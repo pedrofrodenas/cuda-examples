@@ -21,21 +21,36 @@ void sharedImageConvolution(const float *A, float *B, int r, int width , int hei
     int col = OUT_TILE_DIM * blockIdx.x + threadIdx.x - r;
     int row = OUT_TILE_DIM * blockIdx.y + threadIdx.y - r;
 
-    int input_col = blockDim.x * blockIdx.x + threadIdx.x - r;
-    int input_row = blockDim.y * blockIdx.y + threadIdx.y - r;
-
     // Load memory into shared
     if ( (row >= 0) && (row < height) && (col >= 0) && (col < width))
     {
-        N_ds[threadIdx.x][threadIdx.y] = A[row * width + col];
+        N_ds[threadIdx.y][threadIdx.x] = A[row * width + col];
     }
     else
     {
-        N_ds[threadIdx.x][threadIdx.y] = 0.0f;
+        N_ds[threadIdx.y][threadIdx.x] = 0.0f;
     }
     __syncthreads();
 
-    
+    if ( (row >= 0) && (row < height) && (col >= 0) && (col < width))
+    {
+        int row_in = threadIdx.y - FILTER_RADIUS;
+        int col_in = threadIdx.x - FILTER_RADIUS;
+
+        if ( (row_in >= 0) && (row_in < OUT_TILE_DIM) && (col_in >= 0) && (col_in < OUT_TILE_DIM))
+        {
+            float Pval = 0.0f;
+
+            for (int i = 0; i < 2*FILTER_RADIUS + 1; ++i)
+            {
+                for (int j = 0; j < 2*FILTER_RADIUS + 1; ++j)
+                {
+                    Pval += F[i][j] * N_ds[row_in+ i][col_in + j];
+                }
+            }
+            B[row*width + col] = Pval;
+        }
+    }  
 }
 
 int main() {
