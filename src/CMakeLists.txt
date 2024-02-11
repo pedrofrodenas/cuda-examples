@@ -48,3 +48,8 @@ add_executable(imageConvolutionNaive image-convolution/imageConvolutionNaive.cu)
 target_include_directories(imageConvolutionNaive PRIVATE "../include")
 target_link_libraries (imageConvolutionNaive PRIVATE Utils)
 set_target_properties(imageConvolutionNaive PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+add_executable(imageConvolutionNaiveGlobal image-convolution/imageConvolutionNaiveGlobal.cu)
+target_include_directories(imageConvolutionNaiveGlobal PRIVATE "../include")
+target_link_libraries (imageConvolutionNaiveGlobal PRIVATE Utils)
+set_target_properties(imageConvolutionNaiveGlobal PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
