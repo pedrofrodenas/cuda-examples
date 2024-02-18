@@ -59,3 +59,9 @@ add_executable(imageConvolutionShared image-convolution/imageConvolutionShared.c
 target_include_directories(imageConvolutionShared PRIVATE "../include")
 target_link_libraries (imageConvolutionShared PRIVATE Utils)
 set_target_properties(imageConvolutionShared PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+
+add_executable(imageConvolutionSharedHalo image-convolution/imageConvolutionSharedHaloCaching.cu)
+target_include_directories(imageConvolutionSharedHalo PRIVATE "../include")
+target_link_libraries (imageConvolutionSharedHalo PRIVATE Utils)
+set_target_properties(imageConvolutionSharedHalo PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
