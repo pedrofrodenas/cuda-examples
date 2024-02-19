@@ -34,7 +34,6 @@ void sharedImageConvolutionHalo(const float *A, float *B, int r, int width , int
     if ((row < height) && (col < width))
     {
         float Pval = 0.0f;
-        int count = 0;
         for (int i = 0; i < 2*FILTER_RADIUS + 1; ++i)
         {
             for (int j = 0; j < 2*FILTER_RADIUS + 1; ++j)
@@ -45,7 +44,7 @@ void sharedImageConvolutionHalo(const float *A, float *B, int r, int width , int
                      (threadIdx.x - FILTER_RADIUS + j < blockDim.x))
                 {
                     // Case where the processed image value is inside the shared memory block
-                    Pval += F[i][j] * N_ds[threadIdx.y + i][threadIdx.x + j];
+                    Pval += F[i][j] * N_ds[threadIdx.y - FILTER_RADIUS + i][threadIdx.x - FILTER_RADIUS + j];
                 }
                 else 
                 {
@@ -56,15 +55,13 @@ void sharedImageConvolutionHalo(const float *A, float *B, int r, int width , int
                     {
                         // Case where the processed image value is outside shared memory and
                         // we need to copy it from global
-                        count++;
                         Pval += F[i][j] * A[(row-FILTER_RADIUS+i) * width + col-FILTER_RADIUS+j];
                     }
                 }   
             }
         }
         B[row*width + col] = Pval;
-        printf(" count %d \n", count);
-    }  
+    }
 }
 
 int main() {
